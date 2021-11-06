@@ -9,4 +9,4 @@ The data is not open_sourced yet, please contact jihan123@stanford.edu if you ar
 
 `B_DNN_model.py`: uses the AdaBoostRegressor module from scikit-learn. We performed a grid-search over the n_trees and learning_rate hyperparameters to select the optimal values. For each number of cycles we use 5-fold cross-validation to calculate the mean percent error and mean standard error. Saves the trained models so they can be used for testing.  
 
-`Notebook_Implementation.ipynb`: It includes the step by step implementation of the project.
+`B_notebook.ipynb`: It includes the step by step implementation of the project.
