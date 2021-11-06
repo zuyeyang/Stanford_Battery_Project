@@ -37,3 +37,21 @@ def sequential_model(l1,l2,loss_method,X_train,y_train):
                     optimizer="adam",
                     metrics = ['accuracy'])
     return model0
+
+def pred_error(y,key,all_metrics_df,objective):
+    rms={}
+    mae={}
+    for i in key:
+        cell_num = i
+        for_one_cell = all_metrics_df.loc[(all_metrics_df.seq_num == cell_num)]
+        capacity_exp = for_one_cell['diag_discharge_capacity_rpt_0.2C']
+        #x = for_one_cell['cycle_index']
+        cycle_number = for_one_cell['equivalent_full_cycles']
+        #predicted capacity
+        selected = y[:,3] == cell_num
+        a_t1,b_t1,c_t1 = y[selected,0:3][0]
+        acapacity_test = objective(cycle_number,a_t1,b_t1,c_t1)
+        # calculate errors
+        rms[i] = np.sqrt(np.sum(np.square((acapacity_test - capacity_exp))) / len(capacity_exp)) * len(capacity_exp) / np.sum(capacity_exp)
+        mae[i] = np.sum(np.abs(acapacity_test - capacity_exp)) / len(capacity_exp) 
+        return rms, mae
