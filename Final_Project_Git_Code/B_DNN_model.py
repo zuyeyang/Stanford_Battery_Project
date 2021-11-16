@@ -14,12 +14,14 @@ def norm (x,x_train):
 def recover(x,x_train):
     return x*(x_train.max(axis=0)-x_train.min(axis=0))+x_train.min(axis=0)
 
-def data_split(X,y_with_key,i=3):
+def data_split(X,y_with_key):
+    i = y_with_key.shape[1]
+    print(i)
     X_copy = X.copy()
     y_with_key_copy = y_with_key.copy()
     X_train, X_test, y_train_coef, y_test_coef = train_test_split(X_copy, y_with_key_copy, test_size=0.2, random_state=3)
-    y_train = y_train_coef[:,0:i]
-    y_test = y_test_coef[:,0:i]
+    y_train = y_train_coef[:,0:i-1]
+    y_test = y_test_coef[:,0:i-1]
 
     y_train_norm = norm(y_train,y_train)
     y_test_norm =  norm(y_test,y_train)
@@ -41,6 +43,7 @@ def sequential_model(l1,l2,loss_method,X_train,y_train):
 def pred_error(y,key,all_metrics_df,objective):
     rms={}
     mae={}
+    num_var = y.shape[1]-1
     for i in key:
         cell_num = i
         for_one_cell = all_metrics_df.loc[(all_metrics_df.seq_num == cell_num)]
@@ -48,9 +51,21 @@ def pred_error(y,key,all_metrics_df,objective):
         #x = for_one_cell['cycle_index']
         cycle_number = for_one_cell['equivalent_full_cycles']
         #predicted capacity
-        selected = y[:,3] == cell_num
-        a_t1,b_t1,c_t1 = y[selected,0:3][0]
-        acapacity_test = objective(cycle_number,a_t1,b_t1,c_t1)
+        #predicted capacity
+        selected = y[:,num_var] == cell_num
+        if num_var == 3:
+            a,b,c = y[selected,0:num_var][0]
+            acapacity_test = objective(cycle_number,a,b,c)
+        elif num_var == 4:
+            a,b,c, d = y[selected,0:num_var][0]
+            acapacity_test = objective(cycle_number,a,b,c,d)
+        elif num_var == 5:
+            a,b,c, d , e = y[selected,0:num_var][0]
+            acapacity_test = objective(cycle_number,a,b,c,d,e)
+        #selected = y[:,3] == cell_num
+        #a_t1,b_t1,c_t1 = y[selected,0:num_var][0]
+        #acapacity_test = objective(cycle_number,a_t1,b_t1,c_t1)
+
         # calculate errors
         rms[i] = np.sqrt(np.sum(np.square((acapacity_test - capacity_exp))) / len(capacity_exp)) * len(capacity_exp) / np.sum(capacity_exp)
         mae[i] = np.sum(np.abs(acapacity_test - capacity_exp)) / len(capacity_exp) 
