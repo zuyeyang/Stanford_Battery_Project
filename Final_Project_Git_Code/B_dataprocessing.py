@@ -53,13 +53,243 @@ def data_generation():
     all_metrics_df = pd.merge(hppc_res_df, RPT_metrics_df,  how='left', left_on=['seq_num','cycle_index'], right_on = ['seq_num','cycle_index'])
     return all_metrics_df,testParamDf
 
-def objective(x, a, b, c):
+
+def second_order_poly_fitting(all_metrics_df,testParamDf):
+    from sklearn import preprocessing
+    from sklearn.preprocessing import StandardScaler
+    from scipy.optimize import fmin
+
+    Y={}
+    for i in range(328):
+        for_one_cell = all_metrics_df.loc[(all_metrics_df.seq_num == list(all_metrics_df.seq_num.unique())[i])] # get all cycling data for 1 cell
+        if len(for_one_cell) > 3:  # not select cells have too less data point
+            y = for_one_cell['diag_discharge_capacity_rpt_0.2C']
+                #x = for_one_cell['cycle_index']
+            x = for_one_cell['equivalent_full_cycles']
+            r_dis_oh = for_one_cell['r_d_o_0']
+            r_dis_ct = for_one_cell['r_d_ct_0']
+            r_dis_pul = for_one_cell['r_d_p_0']
+            r_tot = r_dis_oh + r_dis_ct + r_dis_pul    
+            f_pow2 = lambda beta, x: beta[2] + beta[1] * x + beta[0] * x ** 2
+            rms_pow2 = lambda beta, x, y: np.sqrt(np.sum(np.square((f_pow2(beta,x)-y))) / len(y)) * 100 * len(y) / np.sum(y)
+            beta = fmin(rms_pow2, [1e-6,1e-3, 4.8], args=(x,y))
+            k = for_one_cell.cycle_index.keys()[0]   
+            key = all_metrics_df.seq_num[k]       # find seq_num of this cell
+            rms = rms_pow2(beta,x,y)  # calculate %RMS
+            if rms < 5:   # select fittings within 5% RMS
+                Y[key] = [beta,rms,float(y.head(1)),float(r_tot.iloc[1])]
+    seq_num = pd.Series(Y.keys())
+    cur_param = pd.Series(Y.values())
+    cur_param_1 = pd.Series([cur[0][0] for cur in cur_param])
+    cur_param_2 = pd.Series([cur[0][1] for cur in cur_param])
+    cur_param_3 = pd.Series([cur[0][2] for cur in cur_param])
+    cur_err = pd.Series([cur[1] for cur in cur_param])
+    capacity_initial = pd.Series([cur[2] for cur in cur_param])
+    resistance_initial = pd.Series([cur[3] for cur in cur_param])
+    Y_matrix_pre = pd.DataFrame({'seq_num': seq_num, 'cur_param_1': cur_param_1, 'cur_param_2': cur_param_2, 'cur_param_3': cur_param_3,
+                                    'cur_err':cur_err, 'capacity_initial':capacity_initial, 'resistance_initial':resistance_initial})
+    #display(Y_matrix_pre)
+    # prepare X matrix
+    X_column_list = list(testParamDf.columns)[3:11]
+    X_matrix = testParamDf[['seq_num'] + X_column_list]
+    # merge X and Y matrix based on seq_num
+    X_Y_merged = pd.merge(Y_matrix_pre, X_matrix,  how='left', left_on=['seq_num'], right_on = ['seq_num'])
+    X_Y_merged = X_Y_merged.dropna()
+    # normalize input X 
+    scaler=preprocessing.StandardScaler().fit(X_Y_merged[['capacity_initial']+['resistance_initial']+X_column_list])
+    X = scaler.transform(X_Y_merged[['capacity_initial']+['resistance_initial']+X_column_list])
+    #display(X)
+    y_matrix = [y[0] for y in Y.values()] 
+    y = np.array(y_matrix)
+    return X,y,Y,X_Y_merged
+
+
+def third_order_poly_fitting(all_metrics_df,testParamDf):
+    from sklearn import preprocessing
+    from sklearn.preprocessing import StandardScaler
+    from scipy.optimize import fmin
+
+    Y={}
+    for i in range(328):
+        for_one_cell = all_metrics_df.loc[(all_metrics_df.seq_num == list(all_metrics_df.seq_num.unique())[i])] # get all cycling data for 1 cell
+        if len(for_one_cell) > 3:  # not select cells have too less data point
+            y = for_one_cell['diag_discharge_capacity_rpt_0.2C']
+                #x = for_one_cell['cycle_index']
+            x = for_one_cell['equivalent_full_cycles']
+            r_dis_oh = for_one_cell['r_d_o_0']
+            r_dis_ct = for_one_cell['r_d_ct_0']
+            r_dis_pul = for_one_cell['r_d_p_0']
+            r_tot = r_dis_oh + r_dis_ct + r_dis_pul    
+            f_pow3 = lambda beta, x: beta[3] + beta[2] * x + beta[1] * x ** 2 + beta[0] * x ** 3
+            rms_pow3 = lambda beta, x, y: np.sqrt(np.sum(np.square((f_pow3(beta,x)-y))) / len(y)) * 100 * len(y) / np.sum(y)
+            beta = fmin(rms_pow3, [0,1e-6,1e-3, 4.8], args=(x,y))
+            k = for_one_cell.cycle_index.keys()[0]   
+            key = all_metrics_df.seq_num[k]       # find seq_num of this cell
+            rms = rms_pow3(beta,x,y)  # calculate %RMS
+            if rms < 5:   # select fittings within 5% RMS
+                Y[key] = [beta,rms,float(y.head(1)),float(r_tot.iloc[1])]
+    seq_num = pd.Series(Y.keys())
+    cur_param = pd.Series(Y.values())
+    cur_param_1 = pd.Series([cur[0][0] for cur in cur_param])
+    cur_param_2 = pd.Series([cur[0][1] for cur in cur_param])
+    cur_param_3 = pd.Series([cur[0][2] for cur in cur_param])
+    cur_param_4 = pd.Series([cur[0][3] for cur in cur_param])
+    cur_err = pd.Series([cur[1] for cur in cur_param])
+    capacity_initial = pd.Series([cur[2] for cur in cur_param])
+    resistance_initial = pd.Series([cur[3] for cur in cur_param])
+    Y_matrix_pre = pd.DataFrame({'seq_num': seq_num, 'cur_param_1': cur_param_1, 'cur_param_2': cur_param_2, 'cur_param_3': cur_param_3,
+                                    'cur_param_4': cur_param_4,'cur_err':cur_err, 'capacity_initial':capacity_initial, 'resistance_initial':resistance_initial})
+    #display(Y_matrix_pre)
+    # prepare X matrix
+    X_column_list = list(testParamDf.columns)[3:11]
+    X_matrix = testParamDf[['seq_num'] + X_column_list]
+    # merge X and Y matrix based on seq_num
+    X_Y_merged = pd.merge(Y_matrix_pre, X_matrix,  how='left', left_on=['seq_num'], right_on = ['seq_num'])
+    X_Y_merged = X_Y_merged.dropna()
+    # normalize input X 
+    scaler=preprocessing.StandardScaler().fit(X_Y_merged[['capacity_initial']+['resistance_initial']+X_column_list])
+    X = scaler.transform(X_Y_merged[['capacity_initial']+['resistance_initial']+X_column_list])
+    #display(X)
+    y_matrix = [y[0] for y in Y.values()] 
+    y = np.array(y_matrix)
+    return X,y,Y,X_Y_merged
+
+def forth_order_poly_fitting(all_metrics_df,testParamDf):
+    from sklearn import preprocessing
+    from sklearn.preprocessing import StandardScaler
+    from scipy.optimize import fmin
+
+    Y={}
+    for i in range(328):
+        for_one_cell = all_metrics_df.loc[(all_metrics_df.seq_num == list(all_metrics_df.seq_num.unique())[i])] # get all cycling data for 1 cell
+        if len(for_one_cell) > 3:  # not select cells have too less data point
+            y = for_one_cell['diag_discharge_capacity_rpt_0.2C']
+                #x = for_one_cell['cycle_index']
+            x = for_one_cell['equivalent_full_cycles']
+            r_dis_oh = for_one_cell['r_d_o_0']
+            r_dis_ct = for_one_cell['r_d_ct_0']
+            r_dis_pul = for_one_cell['r_d_p_0']
+            r_tot = r_dis_oh + r_dis_ct + r_dis_pul    
+            f_pow4 = lambda beta, x: beta[4] + beta[3] * x + beta[2] * x ** 2 + beta[1] * x ** 3 + beta[0] * x ** 4
+            rms_pow4 = lambda beta, x, y: np.sqrt(np.sum(np.square((f_pow4(beta,x)-y))) / len(y)) * 100 * len(y) / np.sum(y)
+            beta = fmin(rms_pow4, [0,0,1e-3,1e-6, 4.8], args=(x,y), maxiter= 2000)
+            k = for_one_cell.cycle_index.keys()[0]   
+            key = all_metrics_df.seq_num[k]       # find seq_num of this cell
+            rms = rms_pow4(beta,x,y)  # calculate %RMS
+            if rms < 5:   # select fittings within 5% RMS
+                Y[key] = [beta,rms,float(y.head(1)),float(r_tot.iloc[1])]
+    seq_num = pd.Series(Y.keys())
+    cur_param = pd.Series(Y.values())
+    cur_param_1 = pd.Series([cur[0][0] for cur in cur_param])
+    cur_param_2 = pd.Series([cur[0][1] for cur in cur_param])
+    cur_param_3 = pd.Series([cur[0][2] for cur in cur_param])
+    cur_param_4 = pd.Series([cur[0][3] for cur in cur_param])
+    cur_param_5 = pd.Series([cur[0][4] for cur in cur_param])
+    cur_err = pd.Series([cur[1] for cur in cur_param])
+    capacity_initial = pd.Series([cur[2] for cur in cur_param])
+    resistance_initial = pd.Series([cur[3] for cur in cur_param])
+    Y_matrix_pre = pd.DataFrame({'seq_num': seq_num, 'cur_param_1': cur_param_1, 'cur_param_2': cur_param_2, 'cur_param_3': cur_param_3,'cur_param_4': cur_param_4,
+                                    'cur_param_5': cur_param_5,'cur_err':cur_err, 'capacity_initial':capacity_initial, 'resistance_initial':resistance_initial})
+    #display(Y_matrix_pre)
+    # prepare X matrix
+    X_column_list = list(testParamDf.columns)[3:11]
+    X_matrix = testParamDf[['seq_num'] + X_column_list]
+    # merge X and Y matrix based on seq_num
+    X_Y_merged = pd.merge(Y_matrix_pre, X_matrix,  how='left', left_on=['seq_num'], right_on = ['seq_num'])
+    X_Y_merged = X_Y_merged.dropna()
+    # normalize input X 
+    scaler=preprocessing.StandardScaler().fit(X_Y_merged[['capacity_initial']+['resistance_initial']+X_column_list])
+    X = scaler.transform(X_Y_merged[['capacity_initial']+['resistance_initial']+X_column_list])
+    #display(X)
+    y_matrix = [y[0] for y in Y.values()] 
+    y = np.array(y_matrix)
+    return X,y,Y,X_Y_merged
+
+
+def exponential_order_poly_fitting(all_metrics_df,testParamDf):
+    from sklearn import preprocessing
+    from sklearn.preprocessing import StandardScaler
+    from scipy.optimize import fmin
+
+    Y={}
+    for i in range(328):
+        for_one_cell = all_metrics_df.loc[(all_metrics_df.seq_num == list(all_metrics_df.seq_num.unique())[i])] # get all cycling data for 1 cell
+        if len(for_one_cell) > 3:  # not select cells have too less data point
+            y = for_one_cell['diag_discharge_capacity_rpt_0.2C']
+                #x = for_one_cell['cycle_index']
+            x = for_one_cell['equivalent_full_cycles']
+            r_dis_oh = for_one_cell['r_d_o_0']
+            r_dis_ct = for_one_cell['r_d_ct_0']
+            r_dis_pul = for_one_cell['r_d_p_0']
+            r_tot = r_dis_oh + r_dis_ct + r_dis_pul    
+            f_exp = lambda beta, x: beta[0] * x ** 2 + beta[1] * np.exp(beta[2] * x) + beta[3]
+            rms_exp = lambda beta, x, y: np.sqrt(np.sum(np.square((f_exp(beta,x)-y))) / len(y)) * 100 * len(y) / np.sum(y)
+            beta = fmin(rms_exp, [0,0,0, 4.8], args=(x,y), maxiter= 2000)
+            k = for_one_cell.cycle_index.keys()[0]   
+            key = all_metrics_df.seq_num[k]       # find seq_num of this cell
+            rms = rms_exp(beta,x,y)  # calculate %RMS
+            if rms < 5:   # select fittings within 5% RMS
+                Y[key] = [beta,rms,float(y.head(1)),float(r_tot.iloc[1])]
+    seq_num = pd.Series(Y.keys())
+    cur_param = pd.Series(Y.values())
+    cur_param_1 = pd.Series([cur[0][0] for cur in cur_param])
+    cur_param_2 = pd.Series([cur[0][1] for cur in cur_param])
+    cur_param_3 = pd.Series([cur[0][2] for cur in cur_param])
+    cur_param_4 = pd.Series([cur[0][3] for cur in cur_param])
+    cur_err = pd.Series([cur[1] for cur in cur_param])
+    capacity_initial = pd.Series([cur[2] for cur in cur_param])
+    resistance_initial = pd.Series([cur[3] for cur in cur_param])
+    Y_matrix_pre = pd.DataFrame({'seq_num': seq_num, 'cur_param_1': cur_param_1, 'cur_param_2': cur_param_2, 'cur_param_3': cur_param_3,
+                                    'cur_param_4': cur_param_4,'cur_err':cur_err, 'capacity_initial':capacity_initial, 'resistance_initial':resistance_initial})
+    #display(Y_matrix_pre)
+    # prepare X matrix
+    X_column_list = list(testParamDf.columns)[3:11]
+    X_matrix = testParamDf[['seq_num'] + X_column_list]
+    # merge X and Y matrix based on seq_num
+    X_Y_merged = pd.merge(Y_matrix_pre, X_matrix,  how='left', left_on=['seq_num'], right_on = ['seq_num'])
+    X_Y_merged = X_Y_merged.dropna()
+    # normalize input X 
+    scaler=preprocessing.StandardScaler().fit(X_Y_merged[['capacity_initial']+['resistance_initial']+X_column_list])
+    X = scaler.transform(X_Y_merged[['capacity_initial']+['resistance_initial']+X_column_list])
+    #display(X)
+    y_matrix = [y[0] for y in Y.values()] 
+    y = np.array(y_matrix)
+    return X,y,Y,X_Y_merged
+
+
+def objective_2(x, a, b, c):
+    '''
+    Assumped model to represent trajectory curve
+    '''
+    return a * x**2 + b * x + c
+def objective_3(x, d, a, b, c):
+    '''
+    Assumped model to represent trajectory curve 
+    '''
+    return d * x**3 + a * x**2 + b * x + c
+def objective_4(x, e, d, a, b, c):
+    '''
+    Assumped model to represent trajectory curve 
+    '''
+    return e*x**4 + d * x**3 + a * x**2 + b * x + c
+def objective_exponential(x, a, b, c , d):
+    '''
+    Assumped model to represent trajectory curve of e
+    '''
+    return a * x**2 + b * np.exp(c * x) + d
+
+
+
+
+
+
+def objective_0(x, a, b, c):
     '''
     Assumped model to represent trajectory curve
     '''
     return a * x * x + b * x + c
 
-def raw_input(all_metrics_df,testParamDf):
+def raw_order_poly_fitting(all_metrics_df,testParamDf):
     '''
     Generate X and y raw input
     '''
@@ -123,3 +353,5 @@ def raw_input(all_metrics_df,testParamDf):
     y_matrix = [y[0] for y in Y.values()] 
     y = np.array(y_matrix)
     return X,y,Y,X_Y_merged
+
+
