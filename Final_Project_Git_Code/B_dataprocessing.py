@@ -317,14 +317,14 @@ def raw_order_poly_fitting(all_metrics_df,testParamDf):
             r_tot = r_dis_oh + r_dis_ct + r_dis_pul
             
             try:                           
-                popt, _ = curve_fit(objective, x, y, bounds=([-1e-4,-0.002,4],[5e-5,0.02,5]))  # fit curve
+                popt, _ = curve_fit(objective_0, x, y, bounds=([-1e-4,-0.002,4],[5e-5,0.02,5]))  # fit curve
             except:
                 continue   # if not fit, continue to next cell
             else:
                 a, b, c= popt
                 k = for_one_cell.cycle_index.keys()[0]   
                 key = all_metrics_df.seq_num[k]       # find seq_num of this cell
-                y_pre = np.array([objective(x2, a, b,c) for x2 in x])  #calculate y_pre based on fiiting function
+                y_pre = np.array([objective_0(x2, a, b,c) for x2 in x])  #calculate y_pre based on fiiting function
                 rms = np.sqrt(np.sum(np.square((y_pre - y))) / len(y)) * 100 * len(y) / np.sum(y)  # calculate %RMS
                 if rms < 5:   # select fittings within 5% RMS
                     Y[key] = [popt,rms,float(y.head(1)),float(r_tot.iloc[1])]  #store fitting params, %rms, initial capacity and resistance
