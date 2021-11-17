@@ -19,7 +19,7 @@ def data_split(X,y_with_key):
     print(i)
     X_copy = X.copy()
     y_with_key_copy = y_with_key.copy()
-    X_train, X_test, y_train_coef, y_test_coef = train_test_split(X_copy, y_with_key_copy, test_size=0.2, random_state=3)
+    X_train, X_test, y_train_coef, y_test_coef = train_test_split(X_copy, y_with_key_copy, test_size=0.2, random_state=0)
     y_train = y_train_coef[:,0:i-1]
     y_test = y_test_coef[:,0:i-1]
 
