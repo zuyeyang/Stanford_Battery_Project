@@ -126,7 +126,7 @@ def third_order_poly_fitting(all_metrics_df,testParamDf):
             k = for_one_cell.cycle_index.keys()[0]   
             key = all_metrics_df.seq_num[k]       # find seq_num of this cell
             rms = rms_pow3(beta,x,y)  # calculate %RMS
-            if rms < 5:   # select fittings within 5% RMS
+            if rms < 10:   # select fittings within 5% RMS
                 Y[key] = [beta,rms,float(y.head(1)),float(r_tot.iloc[1])]
     seq_num = pd.Series(Y.keys())
     cur_param = pd.Series(Y.values())
