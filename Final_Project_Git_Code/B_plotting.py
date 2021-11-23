@@ -55,6 +55,7 @@ def plot_curve_pred(y,key,l,w,all_metrics_df,objective):
         #test
         if num_var == 3:
             a,b,c = y[selected,0:num_var][0]
+            #print(a,b,c)
             acapacity_test_1 = objective(x,a,b,c)
         elif num_var == 4:
             a,b,c, d = y[selected,0:num_var][0]
@@ -79,3 +80,19 @@ def correlation_heatmap(X_Y_merged,testParamDf):
     plt.figure(figsize=(16,6))
     sn.heatmap(corrMatrix, vmin=-1, vmax=1, annot=True,cmap='BrBG')
     plt.show()
+
+def create_poly(X,k,m = 0):
+    """
+    Generates a polynomial feature map using the data x.
+    The polynomial map should have powers from 0 to k
+    Output should be a numpy array whose shape is (n_examples, k+1)
+
+    Args:
+        X: Training example inputs. Shape (n_examples, 2).
+    """
+    # *** START CODE HERE ***
+    if m ==0:
+        m = X.shape[1]
+    X_1 = X[:,:m]
+    polyx = np.column_stack([X_1**(i) for i in range(1,k+1)])
+    return polyx
