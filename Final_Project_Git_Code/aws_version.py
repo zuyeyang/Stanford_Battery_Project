@@ -7,12 +7,8 @@ def main(plot=True):
     all_metrics_df,testParamDf = data_generation()
     test_coef = ["0"]
     func_coef = ["raw"]
-    for i in range(0,1):
-        globals()[f'X{test_coef[i]}'],globals()[f'y{test_coef[i]}'],globals()[f'Y{test_coef[i]}'],globals()[f'X_Y_merged{test_coef[i]}'] = \
-            eval(func_coef[i]+"_order_poly_fitting(all_metrics_df,testParamDf)")
-        
     version = '0' #raw ones
-    X,y,Y,X_Y_merged = eval('X'+version),eval('y'+version),eval('Y'+version),eval('X_Y_merged'+version)
+    X,y,Y,X_Y_merged = eval(func_coef[0]+"_order_poly_fitting(all_metrics_df,testParamDf)")
     objective = eval('objective_'+version)    
 
     model_raw = battery_model(0,X,y,Y,X_Y_merged,objective)

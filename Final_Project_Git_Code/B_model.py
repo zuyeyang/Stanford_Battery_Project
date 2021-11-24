@@ -106,10 +106,11 @@ class battery_model():
         self.model = sequential_model(loss_fun,X_train,y_train,nl,opt)
 
         lr_model_history = self.model.fit(X_train, y_train_norm, 
-                                epochs=epochs, 
-                                verbose=verbose,
-                                class_weight = class_weight
-                                ,validation_data=(X_val, y_val_norm))
+                                        epochs=epochs, 
+                                        verbose=verbose,
+                                        class_weight = class_weight
+                                        ,validation_data=(X_val, y_val_norm))
+                                
         self.lr_model_history = lr_model_history
         
         raw_y_pred = self.model.predict(X_test)
