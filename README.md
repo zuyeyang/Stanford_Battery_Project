@@ -3,6 +3,8 @@ This repository contains code for our work on early trajectory prediction of bat
 The data is not open_sourced yet, please contact jihan123@stanford.edu if you are interesed in learning more about our project
 ### Our key scripts and functions are summarized here:
 
+## Original_Version
+
 `B_dataprocessing.py`: Inlcude functions to Proprocess all 390 cells data and extract the best fitting curve X and y.
 
 `B_plotting.py`: Include three function to plot the Empirical Degredation curve, Empirical Selected Fitting Degredation curve, and Predicted Degredation curve, and correlation Heatmap between variables.  
@@ -10,3 +12,6 @@ The data is not open_sourced yet, please contact jihan123@stanford.edu if you ar
 `B_DNN_model.py`: Include functions of Multi-output Neural Network that can be implement to train the battery data.
 
 `B_notebook.ipynb`: It includes the step by step implementation of the project.
+
+## AWS_Version
+All codes are embedded in to a `battery_model` and you can just interact with the model with `final_note.ipynb` or run all the hyperparameter tuning process with `aws_version.py`. The cs230.pem is the AWS key code.
