@@ -70,7 +70,7 @@ def main(plot=True):
                             print (index,i0,i1,i2,i3,i4,i5,result['Rsquare_median'][index],result['R_greater_80'][index],result['R_greater_85'][index])
                             index+=1
 
-    result.to_csv('result.csv')
+    result.to_csv('result3.csv')
 
     return result
     

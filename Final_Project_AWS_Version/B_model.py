@@ -23,6 +23,9 @@ from B_DNN_model import *
 from B_plotting import *
 
 class battery_model():
+    np.random.seed(1)
+    random.seed(2)
+    tf.compat.v1.set_random_seed(3)
     def __init__(self,i,X,y,Y,X_Y_merged,objective):
         self.group = i
         self.X = X
@@ -86,7 +89,7 @@ class battery_model():
     def input_restore(self):
         self.X = self.originalx
 
-    def model_construction_and_training(self,all_metrics_df,loss_fun,class_weight,nl,opt,epochs, verbose):
+    def model_construction_and_training(self,type,all_metrics_df,loss_fun,class_weight,nl,opt,epochs, verbose):
         '''
         Parameters: X and y_with_key
         Hyperparameters:
@@ -101,23 +104,22 @@ class battery_model():
         
         output: model0,  defined evaluation matrics, (graph of prediction ,)
         '''
-
-        X_train,X_test,X_val, y_train_coef,y_test_coef,y_val_coef,y_train,y_test,y_val,y_train_norm,y_test_norm,y_val_norm=data_split(self.X,self.y_with_key)
+        X_train,X_test, y_train_coef,y_test_coef,y_train,y_test,y_train_norm,y_test_norm=data_split(self.X,self.y_with_key,type)
         self.model = sequential_model(loss_fun,X_train,y_train,nl,opt)
 
         lr_model_history = self.model.fit(X_train, y_train_norm, 
                                         epochs=epochs, 
                                         verbose=verbose,
                                         class_weight = class_weight
-                                        ,validation_data=(X_val, y_val_norm))
+                                        ,validation_split= 0.1)
                                 
         self.lr_model_history = lr_model_history
         
         raw_y_pred = self.model.predict(X_test)
-        self.y_pred = recover(raw_y_pred,y_train)
+        self.y_pred = recover(raw_y_pred,y_train,type)
         self.var_num = self.y_pred.shape[1]
 
-        y_pred_true= recover(y_test_norm,y_train)
+        y_pred_true= recover(y_test_norm,y_train,type)
 
         test_key = y_test_coef[:,-1]
         self.test_key = test_key
