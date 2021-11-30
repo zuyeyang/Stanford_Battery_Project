@@ -51,7 +51,7 @@ def main(plot=True):
         model_raw_copy1.input_argumentation_update(i0)
         model_raw_copy2 = copy.deepcopy(model_raw_copy1)
         for i1 in ['mae']:
-            for i2 in class_weight_all[6:]:
+            for i2 in class_weight_all[:7]:
                 for i3 in nl_all:
                     for i4 in ['RMSprop']:
                         for i5 in epochs_all:
@@ -69,8 +69,8 @@ def main(plot=True):
                             #model_raw_copy.model.save('models/model_{}'.format(index))
                             print (index,i0,i1,i2,i3,i4,i5,result['Rsquare_median'][index],result['R_greater_80'][index],result['R_greater_85'][index])
                             index+=1
-            result.to_csv('result345_temp.csv')
-    result.to_csv('result345.csv')
+            result.to_csv('result_171_temp.csv')
+    result.to_csv('result_171.csv')
 
     return result
     
