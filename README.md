@@ -14,4 +14,4 @@ The data is not open_sourced yet, please contact jihan123@stanford.edu if you ar
 `B_notebook.ipynb`: It includes the step by step implementation of the project.
 
 ## AWS_Version
-All codes are embedded in to a `battery_model` and you can just interact with the model with `final_note.ipynb` or run all the hyperparameter tuning process with `aws_version.py`. The cs230.pem is the AWS key code.
+All codes are embedded in to a `battery_model` and you can just interact with the model with `final_note.ipynb` or run all the hyperparameter tuning process with `aws_version.py`.
