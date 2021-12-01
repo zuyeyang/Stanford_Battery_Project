@@ -5,6 +5,8 @@ The data is not open_sourced yet, please contact jihan123@stanford.edu if you ar
 
 ## AWS_version_local
 All codes are embedded in to a `battery_model` and you can just interact with the model with `final_note.ipynb` or run all the hyperparameter tuning process with `aws_version.py`. Some examples methods files includes:
+  `B_model.py` : we have a model class to predict our project
+  
   `B_dataprocessing.py`: Inlcude functions to Proprocess all 390 cells data and extract the best fitting curve X and y.
 
   `B_plotting.py`: Include three function to plot the Empirical Degredation curve, Empirical Selected Fitting Degredation curve, and Predicted Degredation curve, and correlation Heatmap between variables.  
