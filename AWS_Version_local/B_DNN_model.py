@@ -42,8 +42,11 @@ def sequential_model(loss_method,X_train,y_train,nl,opt):
     if len(nl) == 2:
         model0.add(Dense(nl[1], activation='relu'))
     if len(nl) == 3:
+        model0.add(Dense(nl[1], activation='relu'))
         model0.add(Dense(nl[2], activation='relu'))
     if len(nl) == 4:
+        model0.add(Dense(nl[1], activation='relu'))
+        model0.add(Dense(nl[2], activation='relu'))
         model0.add(Dense(nl[3], activation='relu'))
     model0.add(Dense(out_dim))
     model0.compile(loss=loss_method,

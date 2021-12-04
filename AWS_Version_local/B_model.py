@@ -23,9 +23,6 @@ from B_DNN_model import *
 from B_plotting import *
 
 class battery_model():
-    np.random.seed(1)
-    random.seed(2)
-    tf.compat.v1.set_random_seed(3)
     def __init__(self,i,X,y,Y,X_Y_merged,objective):
         self.group = i
         self.X = X
@@ -104,6 +101,9 @@ class battery_model():
         
         output: model0,  defined evaluation matrics, (graph of prediction ,)
         '''
+        np.random.seed(1)
+        random.seed(2)
+        tf.compat.v1.set_random_seed(3)
         X_train,X_test, y_train_coef,y_test_coef,y_train,y_test,y_train_norm,y_test_norm=data_split(self.X,self.y_with_key,type)
         self.model = sequential_model(loss_fun,X_train,y_train,nl,opt)
 
